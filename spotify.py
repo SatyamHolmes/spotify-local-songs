@@ -99,14 +99,61 @@ def get_profile(access_token, config):
     res = make_request(url, 'GET', None, None, headers, auth)
     return res.json()
 
+def create_playlist(access_token, profile, name):
+    url = f"https://api.spotify.com/v1/users/{profile['id']}/playlists"
+    headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+            }
+    data = {
+            "name": name,
+            "public": True
+            }
+    res = make_request(url, 'GET', None, None, headers, ())
+    playlist_id = None
+    if res == None:
+        print(f"Unable to fetch user playlist")
+        sys.exit(1)
+
+    for item in res.json()['items']:
+        if item['name'] == playlist_name:
+            print(f"Playlist with name {name} already present. Using the same")
+            playlist_id = item['id'] 
+            break
+
+    if playlist_id == None:
+        res = make_request(url, 'POST', None, data, headers, ())
+        if res == None:
+            print(f"Failed to create playlist {name}")
+            sys.exit(1)
+        else:
+            print(f"Playlist with name {name} created")
+            playlist_id = res.json()['id']
+
+    return playlist_id
+
 if __name__ == '__main__':
     parser = get_parser()
     args = parser.parse_args()
     config = get_config()
+
+    if not os.path.isdir(args.path):
+        print(f"dir {args.path} is not present or is not a directory") 
+        sys.exit(1)
+
+    playlist_name = args.playlist
+
+    if playlist_name == None:
+        playlist_name = os.path.normpath(args.path)[-1]
 
     access_token = get_access_token()
     if args.genAccessToken or access_token == None:
         access_token = gen_access_token(config)
     
     profile = get_profile(access_token, config)
-    print(profile)
+
+    playlist_id = None
+
+    if not args.preview:
+        playlist_id = create_playlist(access_token, profile, playlist_name)
+
