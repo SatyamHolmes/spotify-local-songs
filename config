@@ -1,0 +1,5 @@
+{
+    "client_id": "{client_id}",
+    "redirect_uri": "https://skgb3isbocrdo6jifztsqmkime0kreot.lambda-url.ap-south-1.on.aws/",
+    "client_secret": "{client_secret}"
+}
