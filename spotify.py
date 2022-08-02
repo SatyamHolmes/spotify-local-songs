@@ -4,6 +4,7 @@ import os
 import json
 import sys
 import time
+import re
 
 tokenFile = 'token.json'
 
@@ -132,6 +133,56 @@ def create_playlist(access_token, profile, name):
 
     return playlist_id
 
+def spotify_songs(access_token, playlist_id, dirPath, preview, skip_songs):
+    url = "https://api.spotify.com/v1/search?type=track&limit=10&q="
+    headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+    }
+    song_uris = []
+    if os.path.isdir(dirPath):
+        print(f"Picking songs from {dirPath}")
+        files = os.listdir(dirPath)
+        for file in files:
+            if os.path.isfile(os.path.join(dirPath, file)):
+                file = os.path.splitext(file)[0]
+                file = re.sub("([a-z0-9A-Z]+\.)+[a-z]+","", file)
+                file = re.sub("[^a-zA-Z]", " ", file)
+                file = re.sub("\s+", " ", file)
+                file = file.strip()
+                if file in skip_songs:
+                    continue
+                print(file)
+                print("----------------------------")
+                res = make_request(url + file, 'GET', None, None, headers, ())
+                if res == None:
+                    print(f"song '{file}' not found")
+                    print("-x-x-x-x-x-x-x-x-x-x-x-x-x")
+                    continue
+                res = res.json()
+                info = res['tracks']['items'][0]
+                song_uris.append(info['uri'])
+                print(info['name'])
+                print(info['external_urls']['spotify'])
+                print("-x-x-x-x-x-x-x-x-x-x-x-x-x")
+                print("")
+    else:
+        print(f"No such dir {dirPath}")
+        sys.exit(1)
+
+def skip_songs_list():
+    skip_songs_file = 'skip_songs' # file which contains list of songs to skip
+    songs_list = []
+    if os.path.isfile(skip_songs_file):
+        with open(skip_songs_file, 'r') as fp:
+            print("Will skip below songs:")
+            for song in fp:
+                song = song.strip()
+                print(song)
+                songs_list.append(song)
+            print("")
+    return songs_list
+
 if __name__ == '__main__':
     parser = get_parser()
     args = parser.parse_args()
@@ -153,7 +204,9 @@ if __name__ == '__main__':
     profile = get_profile(access_token, config)
 
     playlist_id = None
+    skip_songs = skip_songs_list()
 
     if not args.preview:
         playlist_id = create_playlist(access_token, profile, playlist_name)
 
+    spotify_songs(access_token, playlist_id, args.path, args.preview, skip_songs)
