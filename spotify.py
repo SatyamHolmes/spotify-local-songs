@@ -133,6 +133,24 @@ def create_playlist(access_token, profile, name):
 
     return playlist_id
 
+def add_to_playlist(access_token, playlist_id, song_uris):
+    url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
+    headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+            }
+    data = {
+            "uris": song_uris
+            }
+
+    print(f"Adding {len(song_uris)} songs to the playlist")
+    res = make_request(url, 'POST', None, data, headers, ())
+    if res == None:
+        print(f"Failed to add songs to playlist")
+        sys.exit(1)
+    else:
+        print(f"Added all songs to playlist")
+    
 def spotify_songs(access_token, playlist_id, dirPath, preview, skip_songs):
     url = "https://api.spotify.com/v1/search?type=track&limit=10&q="
     headers = {
@@ -166,6 +184,8 @@ def spotify_songs(access_token, playlist_id, dirPath, preview, skip_songs):
                 print(info['external_urls']['spotify'])
                 print("-x-x-x-x-x-x-x-x-x-x-x-x-x")
                 print("")
+        if not preview:
+            add_to_playlist(access_token, playlist_id, song_uris)
     else:
         print(f"No such dir {dirPath}")
         sys.exit(1)
