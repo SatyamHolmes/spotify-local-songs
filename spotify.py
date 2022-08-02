@@ -5,18 +5,18 @@ import json
 import sys
 import time
 
-tokenFile = 'token'
+tokenFile = 'token.json'
 
 def get_parser():
     parser = ag.ArgumentParser(description="convert your song folder into a spotify playlist")
     parser.add_argument('path', type=str, help="path to the folder")
-    parser.add_argument('--playlist', type=str, action='store', dest='playlist', required=False, help="Playlist name to use. Defauls to folder name")
+    parser.add_argument('--playlist', type=str, action='store', dest='playlist', required=False, default=None, help="Playlist name to use. Defauls to folder name")
     parser.add_argument('--genaccesstoken', action='store_true' , dest='genAccessToken', required=False, help="Generates access code")
     parser.add_argument('--preview', action='store_true', dest='preview', required=False, help="Just print the song list. Dont add to spotify")
     return parser
 
 def get_config():
-    config = 'config'
+    config = 'config.json'
     if not os.path.isfile(config):
         print(f"config file not found at {config}")
         sys.exit(1)
@@ -24,11 +24,11 @@ def get_config():
         data = json.load(fp)
     return data
 
-def make_request(url, method, data, headers, auth):
+def make_request(url, method, data, jsondata, headers, auth):
     out = None
     try:
         if method == 'POST':
-            res = req.post(url, data=data, auth=auth, headers=headers)
+            res = req.post(url, json=jsondata, data=data, auth=auth, headers=headers)
         elif method == 'GET':
             res = req.get(url, headers=headers, auth=auth)
         res.raise_for_status()
@@ -77,7 +77,7 @@ def gen_access_token(config):
     auth = req.auth.HTTPBasicAuth(config['client_id'], config['client_secret'])
     headers = {"Content-Type": 'application/x-www-form-urlencoded'}
 
-    res = make_request(api, 'POST', data, headers, auth)
+    res = make_request(api, 'POST', data, None, headers, auth)
     if res != None:
         res = json.loads(res.text)
         access_token = res['access_token']
@@ -96,7 +96,7 @@ def get_profile(access_token, config):
         'Authorization': f"Bearer {access_token}"
     }
     auth = ()
-    res = make_request(url, 'GET', None, headers, auth)
+    res = make_request(url, 'GET', None, None, headers, auth)
     return res.json()
 
 if __name__ == '__main__':

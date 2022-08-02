@@ -1,5 +1,6 @@
 code
-token
+token.json
 env-spotify/**
 .gitscripts/**
 .gitattributes
+.skips/**
