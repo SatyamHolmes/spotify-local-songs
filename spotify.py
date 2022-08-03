@@ -164,7 +164,7 @@ def spotify_songs(access_token, playlist_id, dirPath, preview, skip_songs):
         for file in files:
             if os.path.isfile(os.path.join(dirPath, file)):
                 file = os.path.splitext(file)[0]
-                file = re.sub("([a-z0-9A-Z]+\.)+[a-z]+","", file)
+                file = re.sub("([a-z0-9A-Z]+\.)+[a-zA-Z]+","", file)
                 file = re.sub("[^a-zA-Z]", " ", file)
                 file = re.sub("\s+", " ", file)
                 file = file.strip()
@@ -178,6 +178,10 @@ def spotify_songs(access_token, playlist_id, dirPath, preview, skip_songs):
                     print("-x-x-x-x-x-x-x-x-x-x-x-x-x")
                     continue
                 res = res.json()
+                if len(res['tracks']['items']) == 0:
+                    print(f"Error: No results found for {file}")
+                    print("")
+                    continue
                 info = res['tracks']['items'][0]
                 song_uris.append(info['uri'])
                 print(info['name'])
